@@ -29,6 +29,27 @@
   }
 }
 
+/* Crisp rendering and a gapless full-width marquee */
+.noise {
+  display: none;
+}
+
+.hero-media img {
+  transform: none;
+  animation: none;
+}
+
+.marquee-track {
+  animation-duration: 18s;
+}
+
+.marquee-group {
+  width: auto;
+  min-width: 100vw;
+  padding-right: 0;
+  justify-content: space-around;
+}
+
 /* Solid navigation and buttons */
 .nav {
   width: 100%;
