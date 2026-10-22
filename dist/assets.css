@@ -28,3 +28,41 @@
     padding: 28px;
   }
 }
+
+/* Solid navigation and buttons */
+.nav {
+  width: 100%;
+  max-width: none;
+  padding: 0 36px;
+  background: #050505;
+  border-bottom: 1px solid #252525;
+  mix-blend-mode: normal;
+}
+
+.button,
+.button-invert {
+  background: #f5f5f2;
+  border-color: #f5f5f2;
+  color: #050505;
+}
+
+.button:hover,
+.button-invert:hover {
+  background: #d9d9d5;
+  border-color: #d9d9d5;
+  color: #050505;
+}
+
+.intro {
+  display: block;
+}
+
+.intro-copy {
+  max-width: 1120px;
+}
+
+@media (max-width: 800px) {
+  .nav {
+    padding: 0 18px;
+  }
+}
