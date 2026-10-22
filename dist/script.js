@@ -1,56 +1,46 @@
-const root = document.documentElement;
-const glow = document.querySelector('.cursor-glow');
-const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 document.getElementById('year').textContent = new Date().getFullYear();
 
-if (!reduced) {
-  window.addEventListener('pointermove', (event) => {
-    glow.style.left = `${event.clientX}px`;
-    glow.style.top = `${event.clientY}px`;
-  }, { passive: true });
-
-  document.querySelectorAll('.magnetic').forEach((item) => {
-    item.addEventListener('pointermove', (event) => {
-      const rect = item.getBoundingClientRect();
-      const x = event.clientX - rect.left - rect.width / 2;
-      const y = event.clientY - rect.top - rect.height / 2;
-      item.style.transform = `translate(${x * .14}px, ${y * .14}px)`;
+const revealItems = [...document.querySelectorAll('.reveal')];
+if ('IntersectionObserver' in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
     });
-    item.addEventListener('pointerleave', () => item.style.transform = '');
-  });
-
-  document.querySelectorAll('.tilt-card').forEach((card) => {
-    card.addEventListener('pointermove', (event) => {
-      const rect = card.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - .5;
-      const y = (event.clientY - rect.top) / rect.height - .5;
-      card.style.transform = `perspective(900px) rotateY(${x * 4}deg) rotateX(${y * -4}deg)`;
-    });
-    card.addEventListener('pointerleave', () => card.style.transform = '');
-  });
-
-  let ticking = false;
-  window.addEventListener('scroll', () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(() => {
-      root.style.setProperty('--scroll', window.scrollY);
-      const mark = document.querySelector('.hero-mark');
-      if (mark) mark.style.transform = `translateY(${window.scrollY * .18}px) rotate(${-8 + window.scrollY * .008}deg)`;
-      ticking = false;
-    });
-  }, { passive: true });
+  }, { rootMargin: '0px 0px -5% 0px', threshold: 0.04 });
+  revealItems.forEach((item) => observer.observe(item));
+  window.setTimeout(() => revealItems.forEach((item) => item.classList.add('visible')), 1200);
+} else {
+  revealItems.forEach((item) => item.classList.add('visible'));
 }
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('is-visible');
-      observer.unobserve(entry.target);
-    }
-  });
-}, { threshold: .16 });
+const cards = [...document.querySelectorAll('.experience-card')];
+const universeIds = cards.map((card) => card.dataset.universe);
+const number = new Intl.NumberFormat('en-US');
 
-document.querySelectorAll('.reveal, .split-text').forEach((el) => observer.observe(el));
-document.querySelectorAll('.game-card').forEach((card) => card.style.setProperty('--hover', card.dataset.color));
+async function refreshRobloxStats() {
+  try {
+    const response = await fetch(`/api/roblox?universeIds=${universeIds.join(',')}`);
+    if (!response.ok) throw new Error('Roblox request failed');
+    const payload = await response.json();
+    let totalCCU = 0;
+    let totalVisits = 0;
+    cards.forEach((card) => {
+      const game = payload.data.find((item) => String(item.id) === card.dataset.universe);
+      const ccu = Number(game?.playing ?? 0);
+      const visits = Number(game?.visits ?? card.dataset.visits ?? 0);
+      card.querySelector('.ccu').textContent = number.format(ccu);
+      card.querySelector('.visits').textContent = number.format(visits);
+      totalCCU += ccu;
+      totalVisits += visits;
+    });
+    document.getElementById('total-ccu').textContent = number.format(totalCCU);
+    document.getElementById('total-visits').textContent = number.format(totalVisits);
+  } catch {
+    // Keep the server-fetched fallback numbers visible if Roblox blocks a client request.
+  }
+}
+
+refreshRobloxStats();
+window.setInterval(refreshRobloxStats, 60_000);
