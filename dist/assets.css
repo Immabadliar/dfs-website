@@ -156,6 +156,10 @@ body {
   border-color: rgba(38, 217, 255, .65);
 }
 
+.live-panel > strong {
+  font-size: 52px;
+}
+
 .live-dot {
   background: var(--lime);
   box-shadow: 0 0 14px var(--lime);
